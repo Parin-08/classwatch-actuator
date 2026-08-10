@@ -1,0 +1,401 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Google Fonts ────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ─── Design Tokens ───────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-primary:    #030712;
+  --bg-secondary:  #060d1f;
+  --bg-card:       #0b1428;
+  --bg-elevated:   #0f1a30;
+
+  /* Borders */
+  --border-subtle: rgba(59, 130, 246, 0.10);
+  --border-glow:   rgba(59, 130, 246, 0.28);
+
+  /* Text */
+  --text-primary: #e2e8f0;
+  --text-muted:   #64748b;
+  --text-dim:     #2d3a52;
+
+  /* Fonts — load via @import above */
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Radius language: sharp data-cards, softer UI elements */
+  --radius-tile:  6px;   /* room tiles — sharp, grid-like */
+  --radius-card:  8px;   /* data sub-cards */
+  --radius-panel: 0px;   /* detail panel edge — full bleed */
+  --radius-pill:  9999px;
+  --radius-badge: 4px;   /* device badges — slightly rounded sq */
+  --radius-alert: 14px;  /* alert items — soft */
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: rgba(59,130,246,0.18); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(59,130,246,0.38); }
+
+/* ─── Typography classes ──────────────────────────────────────── */
+/* Instrument-panel numerics: big, bold, tight */
+.stat-number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Larger stat strip numbers */
+.stat-hero {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Wattage / efficiency readout inside tile */
+.instrument-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.font-display { font-family: var(--font-display); }
+
+/* Section label with glowing underline accent */
+.section-label {
+  font-family: var(--font-body);
+  font-size: 0.625rem;  /* 10px */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  position: relative;
+  display: inline-block;
+}
+.section-label::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: -3px;
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, rgba(59,130,246,0.5) 0%, transparent 100%);
+}
+
+/* ─── Glassmorphism cards ─────────────────────────────────────── */
+.glass {
+  background: rgba(11, 20, 40, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: 0 4px 24px -2px rgba(0,0,0,0.25);
+}
+
+.glass-elevated {
+  background: rgba(15, 26, 48, 0.65);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 8px 32px -2px rgba(0,0,0,0.35);
+}
+
+/* ─── Noise overlay ───────────────────────────────────────────── */
+.bg-noise {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.028;
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+
+/* ─── Signature Motif: Corner-cut ────────────────────────────── */
+/* Applied to room tiles for sharp, intentional data-card feel */
+.corner-cut {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+.corner-cut-sm {
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+}
+/* Top-right only cut — for panel header chips */
+.corner-cut-tr {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+
+/* ─── Ambient grid mesh drift ─────────────────────────────────── */
+@keyframes mesh-drift {
+  0%   { background-position: 0px 0px; }
+  100% { background-position: 40px 40px; }
+}
+
+.grid-mesh-drift {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.045) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: mesh-drift 30s linear infinite;
+}
+
+/* ─── Floating ambient particles (CSS-only) ───────────────────── */
+@keyframes particle-rise {
+  0%   { transform: translateY(0)   translateX(0)    scale(1);   opacity: 0; }
+  8%   { opacity: 0.55; }
+  88%  { opacity: 0.25; }
+  100% { transform: translateY(-110px) translateX(14px) scale(0.6); opacity: 0; }
+}
+@keyframes particle-drift-x {
+  0%,100% { margin-left: 0; }
+  50%      { margin-left: 12px; }
+}
+
+.particle {
+  position: absolute;
+  width: 1.5px;
+  height: 1.5px;
+  border-radius: 50%;
+  background: rgba(147, 197, 253, 0.65);
+  animation: particle-rise linear infinite;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* ─── Ambient orb animations ──────────────────────────────────── */
+@keyframes orb-float-1 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(28px,-22px) scale(1.04); }
+  66%      { transform: translate(-18px,14px) scale(0.97); }
+}
+@keyframes orb-float-2 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  40%      { transform: translate(-36px,28px) scale(1.07); }
+  75%      { transform: translate(22px,-16px) scale(0.95); }
+}
+@keyframes orb-float-3 {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%      { transform: translate(18px,32px) scale(1.03); }
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+.ambient-orb-1 {
+  width: 580px; height: 580px;
+  top: -140px; left: -140px;
+  background: radial-gradient(circle, rgba(29,78,216,0.50) 0%, transparent 70%);
+  animation: orb-float-1 26s ease-in-out infinite;
+  opacity: 0.85;
+}
+.ambient-orb-2 {
+  width: 480px; height: 480px;
+  bottom: -90px; right: -90px;
+  background: radial-gradient(circle, rgba(109,40,217,0.42) 0%, transparent 70%);
+  animation: orb-float-2 32s ease-in-out infinite;
+  opacity: 0.8;
+}
+.ambient-orb-3 {
+  width: 420px; height: 420px;
+  top: 30%; left: 35%;
+  background: radial-gradient(circle, rgba(180,83,9,0.22) 0%, transparent 70%);
+  animation: orb-float-3 22s ease-in-out infinite;
+  opacity: 0.55;
+}
+
+/* ─── Tile glow pulse animations ─────────────────────────────── */
+@keyframes glow-blue-pulse {
+  0%,100% { box-shadow: 0 0 7px 2px rgba(59,130,246,0.32), inset 0 0 12px rgba(59,130,246,0.06); }
+  50%      { box-shadow: 0 0 20px 6px rgba(59,130,246,0.58), inset 0 0 22px rgba(59,130,246,0.14); }
+}
+@keyframes glow-amber-pulse {
+  0%,100% { box-shadow: 0 0 9px 3px rgba(245,158,11,0.38), inset 0 0 14px rgba(245,158,11,0.07); }
+  50%      { box-shadow: 0 0 26px 9px rgba(245,158,11,0.72), inset 0 0 26px rgba(245,158,11,0.17); }
+}
+@keyframes glow-red-pulse {
+  0%,100% { box-shadow: 0 0 12px 4px rgba(239,68,68,0.48), inset 0 0 18px rgba(239,68,68,0.11); }
+  50%      { box-shadow: 0 0 36px 14px rgba(239,68,68,0.92), inset 0 0 30px rgba(239,68,68,0.24); }
+}
+
+.tile-normal  { animation: glow-blue-pulse  3.2s ease-in-out infinite; }
+.tile-wasting { animation: glow-amber-pulse 2.0s ease-in-out infinite; }
+.tile-flagged { animation: glow-red-pulse   0.85s ease-in-out infinite; }
+
+/* ─── Tile hover — lift + intensify ──────────────────────────── */
+/* Use transform on the wrapper div (motion.div in CampusMap), not the button,
+   so it doesn't fight the CSS glow animation on the button itself */
+.tile-hover-wrap {
+  transition: transform 0.22s cubic-bezier(0.16,1,0.3,1);
+}
+.tile-hover-wrap:hover {
+  transform: translateY(-3px) scale(1.025);
+}
+.tile-normal.tile-hover-wrap:hover,
+.tile-hover-wrap:has(.tile-normal):hover  { filter: drop-shadow(0 6px 18px rgba(59,130,246,0.55)); }
+.tile-wasting.tile-hover-wrap:hover,
+.tile-hover-wrap:has(.tile-wasting):hover { filter: drop-shadow(0 6px 20px rgba(245,158,11,0.62)); }
+.tile-flagged.tile-hover-wrap:hover,
+.tile-hover-wrap:has(.tile-flagged):hover { filter: drop-shadow(0 6px 22px rgba(239,68,68,0.70)); }
+
+/* ─── Ripple radar rings (flagged tiles) ─────────────────────── */
+@keyframes ripple-expand {
+  0%   { transform: scale(1);   opacity: 0.65; }
+  100% { transform: scale(1.65); opacity: 0; }
+}
+.ripple-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  border: 1.5px solid rgba(239,68,68,0.65);
+  pointer-events: none;
+  animation: ripple-expand 2.6s ease-out infinite;
+  will-change: transform, opacity;
+}
+.ripple-ring-2 { animation-delay: 1.3s; border-color: rgba(239,68,68,0.40); }
+.ripple-ring-3 { animation-delay: 0.65s; border-color: rgba(239,68,68,0.28); border-width: 1px; }
+
+/* ─── Status-change burst glow ────────────────────────────────── */
+@keyframes burst-in {
+  0%   { opacity: 0; transform: scale(0.75); }
+  35%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+.status-burst {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: burst-in 0.85s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+/* ─── Sparkline container ─────────────────────────────────────── */
+.sparkline-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 18px;
+}
+.spark-bar {
+  width: 2px;
+  border-radius: 1px;
+  flex-shrink: 0;
+  transition: height 0.4s ease;
+}
+
+/* ─── Logo wordmark ───────────────────────────────────────────── */
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  line-height: 1;
+}
+.wordmark-accent {
+  /* thin vertical rule between CLASS / WATCH */
+  position: relative;
+}
+
+/* ─── Gradient text ───────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-text-amber {
+  background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Live ping dot ───────────────────────────────────────────── */
+@keyframes live-ping {
+  0%   { transform: scale(1); opacity: 1; }
+  70%  { transform: scale(2.4); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.live-dot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.live-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: live-ping 1.5s ease-out infinite;
+}
+
+/* ─── Recharts overrides ──────────────────────────────────────── */
+.recharts-tooltip-wrapper { outline: none !important; }
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(59,130,246,0.08) !important;
+}
+
+/* ─── Alert badge shimmer ─────────────────────────────────────── */
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+.shimmer-badge {
+  background: linear-gradient(90deg,
+    rgba(239,68,68,0.12) 0%,
+    rgba(239,68,68,0.32) 50%,
+    rgba(239,68,68,0.12) 100%);
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+}
+
+/* ─── Micro-interactions ──────────────────────────────────────── */
+.btn-hover {
+  transition: transform 0.18s cubic-bezier(0.4,0,0.2,1),
+              filter    0.18s cubic-bezier(0.4,0,0.2,1);
+}
+.btn-hover:hover  { transform: translateY(-1px); filter: brightness(1.12); }
+.btn-hover:active { transform: translateY(0);    filter: brightness(0.94); }
+
+/* ─── Panel slide fallback ────────────────────────────────────── */
+@keyframes slideInRight  { from { transform: translateX(105%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+@keyframes slideOutRight { from { transform: translateX(0);    opacity:1; } to { transform:translateX(105%); opacity:0; } }
+.panel-enter { animation: slideInRight  0.38s cubic-bezier(0.16,1,0.3,1) both; }
+.panel-exit  { animation: slideOutRight 0.28s cubic-bezier(0.7,0,1,0.84) both; }
+
+/* ─── Utilities ───────────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
