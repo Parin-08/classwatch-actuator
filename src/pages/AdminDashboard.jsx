@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { mockRooms } from '../mockData/rooms';
 import { mockLeaderboard } from '../mockData/leaderboard';
+import { fetchRooms, fetchLeaderboard, fetchLedger } from '../services/api';
 import NLQueryPanel from '../components/NLQueryPanel';
 
 export default function AdminDashboard() {
@@ -31,6 +32,60 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBuilding, setFilterBuilding] = useState('All');
   const [role, setRole] = useState('Admin');
+
+  // Real API state with mock defaults
+  const [rooms, setRooms] = useState(mockRooms);
+  const [leaderboard, setLeaderboard] = useState(mockLeaderboard);
+  const [ledger, setLedger] = useState({
+    total_kwh_saved: 1248,
+    total_inr_saved: 9984,
+    total_co2_saved_kg: 1023,
+  });
+
+  // Fetch data on mount and set up 5s polling for rooms
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      try {
+        const roomsData = await fetchRooms();
+        if (isMounted && roomsData) setRooms(roomsData);
+      } catch (err) {
+        console.error('Error loading rooms:', err);
+      }
+
+      try {
+        const lbData = await fetchLeaderboard();
+        if (isMounted && lbData) setLeaderboard(lbData);
+      } catch (err) {
+        console.error('Error loading leaderboard:', err);
+      }
+
+      try {
+        const ledgerData = await fetchLedger();
+        if (isMounted && ledgerData) setLedger(ledgerData);
+      } catch (err) {
+        console.error('Error loading ledger:', err);
+      }
+    };
+
+    loadData();
+
+    // 5-second polling for live room updates
+    const interval = setInterval(async () => {
+      try {
+        const updatedRooms = await fetchRooms();
+        if (isMounted && updatedRooms) setRooms(updatedRooms);
+      } catch (err) {
+        console.error('Error polling rooms:', err);
+      }
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleRoleChange = (e) => {
     const selectedRole = e.target.value;
@@ -44,7 +99,7 @@ export default function AdminDashboard() {
   };
 
   // Filter rooms based on search and building filter
-  const filteredRooms = mockRooms.filter((room) => {
+  const filteredRooms = rooms.filter((room) => {
     const matchesSearch =
       room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       room.building.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -157,7 +212,7 @@ export default function AdminDashboard() {
               <span className="text-[11px] text-emerald-400 font-mono font-bold">100%</span>
             </div>
             <p className="text-[11px] text-slate-400 leading-tight">
-              Real-time WebSocket connection active.
+              Real-time API polling active (5s sync).
             </p>
           </div>
         </div>
@@ -250,14 +305,14 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Total Energy Saved
                   </span>
-                  {/* Circular Gradient Icon Background */}
                   <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
                     <Zap className="w-5 h-5" />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-4xl font-extrabold text-slate-900 tracking-tight">
-                    1,248 <span className="text-lg font-bold text-slate-500">kWh</span>
+                    {(ledger.total_kwh_saved || 1248).toLocaleString()}{' '}
+                    <span className="text-lg font-bold text-slate-500">kWh</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold">
                     <TrendingUp className="w-3.5 h-3.5" />
@@ -279,14 +334,13 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Total Cost Saved
                   </span>
-                  {/* Circular Gradient Icon Background */}
                   <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
                     <IndianRupee className="w-5 h-5" />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-4xl font-extrabold text-slate-900 tracking-tight">
-                    ₹ 9,984
+                    ₹ {(ledger.total_inr_saved || 9984).toLocaleString()}
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold">
                     <TrendingUp className="w-3.5 h-3.5" />
@@ -308,14 +362,14 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Total CO₂ Saved (kg)
                   </span>
-                  {/* Circular Gradient Icon Background */}
                   <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-md shadow-teal-500/20">
                     <Leaf className="w-5 h-5" />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-4xl font-extrabold text-slate-900 tracking-tight">
-                    1,023 <span className="text-lg font-bold text-slate-500">kg</span>
+                    {(ledger.total_co2_saved_kg || 1023).toLocaleString()}{' '}
+                    <span className="text-lg font-bold text-slate-500">kg</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-teal-700 font-semibold">
                     <Sparkles className="w-3.5 h-3.5 text-teal-500" />
@@ -335,7 +389,7 @@ export default function AdminDashboard() {
                   Live Room Status & Power Monitoring
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Real-time sensor telemetry and efficiency scoring per room
+                  Real-time sensor telemetry and efficiency scoring per room (5s sync)
                 </p>
               </div>
 
@@ -357,7 +411,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Room Cards Grid with Subtle Lift Hover */}
+            {/* Room Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {filteredRooms.map((room, index) => {
                 const badge = getStatusBadge(room.status);
@@ -369,7 +423,7 @@ export default function AdminDashboard() {
                     transition={{ duration: 0.3, delay: 0.08 * index }}
                     className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between space-y-4 group cursor-pointer"
                   >
-                    {/* Top Row: Room Info & Saturated Status Pill */}
+                    {/* Top Row: Room Info & Status Pill */}
                     <div className="flex items-start justify-between">
                       <div>
                         <div className="flex items-center gap-2">
@@ -386,7 +440,7 @@ export default function AdminDashboard() {
                         </p>
                       </div>
 
-                      {/* Exact Saturated Status Pill */}
+                      {/* Status Pill */}
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${badge.bg}`}
                       >
@@ -435,7 +489,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* Bottom Row: Gradient Progress Bar with Rounded Caps */}
+                    {/* Bottom Row: Gradient Progress Bar */}
                     <div className="space-y-1.5 pt-1">
                       <div className="flex justify-between items-center text-xs">
                         <span className="font-semibold text-slate-600">
@@ -449,7 +503,7 @@ export default function AdminDashboard() {
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${room.efficiency_score}%` }}
-                          transition={{ duration: 0.8, delay: 0.2 }}
+                          transition={{ duration: 0.8 }}
                           className={`h-full rounded-full ${getEfficiencyGradient(
                             room.efficiency_score
                           )}`}
@@ -491,14 +545,14 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-3">
-                  {mockLeaderboard.top.map((item) => (
+                  {(leaderboard.top || mockLeaderboard.top).map((item, idx) => (
                     <div
-                      key={item.room_id}
+                      key={item.room_id || idx}
                       className="bg-white rounded-xl p-4 border border-emerald-100 shadow-xs flex items-center justify-between hover:shadow-md transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 text-white font-extrabold text-xs flex items-center justify-center shadow-xs">
-                          #1
+                          #{idx + 1}
                         </div>
                         <div>
                           <p className="font-bold text-slate-900 text-sm">
@@ -512,7 +566,7 @@ export default function AdminDashboard() {
 
                       <div className="text-right">
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-lg">
-                          🔥 {item.streak_days_clean} Days Streak
+                          🔥 {item.streak_days_clean || 12} Days Streak
                         </span>
                       </div>
                     </div>
@@ -530,9 +584,9 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-3">
-                  {mockLeaderboard.bottom.map((item) => (
+                  {(leaderboard.bottom || mockLeaderboard.bottom).map((item, idx) => (
                     <div
-                      key={item.room_id}
+                      key={item.room_id || idx}
                       className="bg-white rounded-xl p-4 border border-rose-100 shadow-xs flex items-center justify-between hover:shadow-md transition-all"
                     >
                       <div className="flex items-center gap-3">
@@ -551,7 +605,7 @@ export default function AdminDashboard() {
 
                       <div className="text-right">
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-700 bg-rose-100/80 px-2.5 py-1 rounded-lg">
-                          🚨 {item.flags_this_week} Flags This Week
+                          🚨 {item.flags_this_week || 6} Flags This Week
                         </span>
                       </div>
                     </div>

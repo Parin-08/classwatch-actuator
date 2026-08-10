@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -11,12 +11,11 @@ import {
   Search,
   Building2,
   ChevronDown,
-  Clock,
-  Filter,
   CheckCircle,
   Activity
 } from 'lucide-react';
 import { mockRooms } from '../mockData/rooms';
+import { fetchRooms, fetchAlerts } from '../services/api';
 import NLQueryPanel from '../components/NLQueryPanel';
 
 export default function FacilitiesDashboard() {
@@ -26,6 +25,47 @@ export default function FacilitiesDashboard() {
   const [queueFilter, setQueueFilter] = useState('All');
   const [resolvedIds, setResolvedIds] = useState([]);
   const [toastMessage, setToastMessage] = useState('');
+
+  // Real API state with mock defaults
+  const [rooms, setRooms] = useState(mockRooms);
+  const [alerts, setAlerts] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      try {
+        const roomsData = await fetchRooms();
+        if (isMounted && roomsData) setRooms(roomsData);
+      } catch (err) {
+        console.error('Error loading rooms for Facilities:', err);
+      }
+
+      try {
+        const alertsData = await fetchAlerts();
+        if (isMounted && alertsData) setAlerts(alertsData);
+      } catch (err) {
+        console.error('Error loading alerts for Facilities:', err);
+      }
+    };
+
+    loadData();
+
+    // 5-second polling for live room updates
+    const interval = setInterval(async () => {
+      try {
+        const updatedRooms = await fetchRooms();
+        if (isMounted && updatedRooms) setRooms(updatedRooms);
+      } catch (err) {
+        console.error('Error polling rooms for Facilities:', err);
+      }
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Handle role dropdown navigation
   const handleRoleChange = (e) => {
@@ -46,7 +86,7 @@ export default function FacilitiesDashboard() {
   };
 
   // Anomalies queue (rooms that are wasting or flagged)
-  const anomalies = mockRooms.filter(
+  const anomalies = alerts || rooms.filter(
     (room) => room.status === 'wasting' || room.status === 'flagged'
   );
 
@@ -57,9 +97,9 @@ export default function FacilitiesDashboard() {
       (queueFilter === 'Flagged' && room.status === 'flagged') ||
       (queueFilter === 'Wasting' && room.status === 'wasting');
     const matchesSearch =
-      room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      room.building.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      room.room_id.toLowerCase().includes(searchQuery.toLowerCase());
+      (room.name || room.room_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (room.building || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (room.room_id || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -154,7 +194,7 @@ export default function FacilitiesDashboard() {
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 Facilities Dispatch
               </span>
-              <span className="text-[11px] text-emerald-400 font-mono font-bold">Active</span>
+              <span className="text-[11px] text-emerald-400 font-mono font-bold">5s Polling</span>
             </div>
             <p className="text-[11px] text-slate-400 leading-tight">
               HVAC & Electrical Maintenance Team
@@ -257,7 +297,7 @@ export default function FacilitiesDashboard() {
                 Anomaly & Maintenance Queue
               </h3>
               <p className="text-xs text-slate-500">
-                Actionable list of rooms requiring HVAC/Electrical inspection or manual override
+                Actionable list of rooms requiring HVAC/Electrical inspection or manual override (5s sync)
               </p>
             </div>
 
@@ -293,7 +333,7 @@ export default function FacilitiesDashboard() {
                 const isResolved = resolvedIds.includes(room.room_id);
                 return (
                   <motion.div
-                    key={room.room_id}
+                    key={room.room_id || index}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, delay: index * 0.05 }}
@@ -310,17 +350,17 @@ export default function FacilitiesDashboard() {
                             : 'bg-amber-100 text-amber-700 border border-amber-200'
                         }`}
                       >
-                        {room.room_id}
+                        {room.room_id || 'R'}
                       </div>
 
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
                           <h4 className="font-bold text-slate-900 text-base">
-                            {room.name}
+                            {room.name || `Room ${room.room_id}`}
                           </h4>
                           <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
                             <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                            {room.building}
+                            {room.building || 'Campus Block'}
                           </span>
                           <span
                             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badge.bg}`}
@@ -335,7 +375,7 @@ export default function FacilitiesDashboard() {
                         {/* Reason String */}
                         <p className="text-xs text-slate-600 flex items-center gap-1.5 font-medium">
                           <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                          <span>{anomalyReasons[room.room_id] || 'Unexpected power telemetry anomaly detected'}</span>
+                          <span>{room.reason || anomalyReasons[room.room_id] || 'Unexpected power telemetry anomaly detected'}</span>
                         </p>
                       </div>
                     </div>
@@ -347,7 +387,7 @@ export default function FacilitiesDashboard() {
                           Live Consumption
                         </span>
                         <span className="text-base font-extrabold text-slate-900 font-mono">
-                          {room.power_watts.toLocaleString()} W
+                          {(room.power_watts || 1200).toLocaleString()} W
                         </span>
                       </div>
 

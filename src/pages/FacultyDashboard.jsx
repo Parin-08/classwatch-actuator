@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -14,22 +14,63 @@ import {
   Activity,
   Clock,
   BookOpen,
-  GraduationCap,
   ChevronDown,
   Calendar,
   Sparkles
 } from 'lucide-react';
 import { mockRooms } from '../mockData/rooms';
 import { mockTimetable } from '../mockData/timetable';
+import { fetchRooms, fetchTimetable } from '../services/api';
 import NLQueryPanel from '../components/NLQueryPanel';
 
 export default function FacultyDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('My Rooms');
   const [searchQuery, setSearchQuery] = useState('');
-  const [role, setRole] = useState('Faculty');
   const [nudgeSent, setNudgeSent] = useState(false);
 
+  // Real API state with mock defaults
+  const [rooms, setRooms] = useState(mockRooms);
+  const [timetable, setTimetable] = useState(mockTimetable);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      try {
+        const roomsData = await fetchRooms();
+        if (isMounted && roomsData) setRooms(roomsData);
+      } catch (err) {
+        console.error('Error loading rooms for Faculty:', err);
+      }
+
+      try {
+        const ttData = await fetchTimetable();
+        if (isMounted && ttData) setTimetable(ttData);
+      } catch (err) {
+        console.error('Error loading timetable for Faculty:', err);
+      }
+    };
+
+    loadData();
+
+    // 5-second polling for live room updates
+    const interval = setInterval(async () => {
+      try {
+        const updatedRooms = await fetchRooms();
+        if (isMounted && updatedRooms) setRooms(updatedRooms);
+      } catch (err) {
+        console.error('Error polling rooms for Faculty:', err);
+      }
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Handle role dropdown navigation
   const handleRoleChange = (e) => {
     const selectedRole = e.target.value;
     if (selectedRole === 'Admin') {
@@ -42,7 +83,7 @@ export default function FacultyDashboard() {
   };
 
   // Filter rooms assigned to this faculty member (Room R204)
-  const facultyRooms = mockRooms.filter((room) => room.room_id === 'R204');
+  const facultyRooms = rooms.filter((room) => room.room_id === 'R204');
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -256,7 +297,7 @@ export default function FacultyDashboard() {
 
             {/* Horizontal List of Glassmorphism Class Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {mockTimetable.map((session, index) => (
+              {timetable.map((session, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 15 }}
@@ -306,7 +347,7 @@ export default function FacultyDashboard() {
                 My Assigned Room Monitoring
               </h3>
               <p className="text-xs text-slate-500">
-                Live energy consumption & active wastage status for your allocated classroom
+                Live energy consumption & active wastage status for your allocated classroom (5s sync)
               </p>
             </div>
 
