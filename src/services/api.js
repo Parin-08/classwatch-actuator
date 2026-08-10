@@ -3,7 +3,7 @@ import { mockRooms } from '../mockData/rooms';
 import { mockLeaderboard } from '../mockData/leaderboard';
 import { mockTimetable } from '../mockData/timetable';
 
-const API_BASE_URL = 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://172.16.3.11:4000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
