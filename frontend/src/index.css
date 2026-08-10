@@ -1,0 +1,523 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ────────────────────────────────────────────────────── */
+:root {
+  --bg-primary: #030712;
+  /* Deep near-black */
+  --bg-secondary: #0a0f1c;
+  --bg-card: #0d1526;
+  --bg-elevated: #11192b;
+  --border-subtle: rgba(59, 130, 246, 0.12);
+  --border-glow: rgba(59, 130, 246, 0.3);
+  --text-primary: #e2e8f0;
+  --text-muted: #64748b;
+  --text-dim: #334155;
+
+  /* Font tokens */
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+/* ─── Typography: Space Grotesk for display/numeric elements ─── */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.stat-number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.instrument-num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+/* ─── Glassmorphism card ─────────────────────────────────────── */
+.glass {
+  background: rgba(13, 21, 38, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+}
+
+.glass-elevated {
+  background: rgba(17, 25, 43, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Noise & Vignette Overlays ──────────────────────────────── */
+.bg-noise {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 40%, rgba(3, 7, 18, 0.8) 100%);
+  z-index: 1;
+}
+
+/* ─── Signature Visual Motif: Corner Cut ─────────────────────── */
+.corner-cut {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+
+.corner-cut-sm {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+
+/* ─── Grid mesh ──────────────────────────────────────────────── */
+.grid-mesh {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ─── Animated grid mesh drift ───────────────────────────────── */
+@keyframes mesh-drift {
+  0% {
+    background-position: 0px 0px;
+  }
+
+  100% {
+    background-position: 40px 40px;
+  }
+}
+
+.grid-mesh-drift {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: mesh-drift 25s linear infinite;
+}
+
+/* ─── Ambient orb animations ─────────────────────────────────── */
+@keyframes orb-float-1 {
+
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -25px) scale(1.05);
+  }
+
+  66% {
+    transform: translate(-20px, 15px) scale(0.97);
+  }
+}
+
+@keyframes orb-float-2 {
+
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  40% {
+    transform: translate(-40px, 30px) scale(1.08);
+  }
+
+  75% {
+    transform: translate(25px, -18px) scale(0.95);
+  }
+}
+
+@keyframes orb-float-3 {
+
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  50% {
+    transform: translate(20px, 35px) scale(1.04);
+  }
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+
+.ambient-orb-1 {
+  width: 600px;
+  height: 600px;
+  top: -150px;
+  left: -150px;
+  background: radial-gradient(circle, rgba(29, 78, 216, 0.55) 0%, transparent 70%);
+  animation: orb-float-1 25s ease-in-out infinite;
+}
+
+.ambient-orb-2 {
+  width: 500px;
+  height: 500px;
+  bottom: -100px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.45) 0%, transparent 70%);
+  animation: orb-float-2 30s ease-in-out infinite;
+}
+
+.ambient-orb-3 {
+  width: 450px;
+  height: 450px;
+  top: 30%;
+  left: 35%;
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.3) 0%, transparent 70%);
+  animation: orb-float-3 20s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+/* ─── Particle field ─────────────────────────────────────────── */
+@keyframes particle-drift {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translateY(-120px) translateX(20px);
+    opacity: 0;
+  }
+}
+
+.particle {
+  position: absolute;
+  width: 1.5px;
+  height: 1.5px;
+  border-radius: 50%;
+  background: rgba(147, 197, 253, 0.7);
+  animation: particle-drift linear infinite;
+  pointer-events: none;
+}
+
+/* ─── Tile glow animations ───────────────────────────────────── */
+@keyframes glow-blue-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 6px 1px rgba(59, 130, 246, 0.35),
+      inset 0 0 12px rgba(59, 130, 246, 0.08);
+  }
+
+  50% {
+    box-shadow: 0 0 18px 5px rgba(59, 130, 246, 0.6),
+      inset 0 0 20px rgba(59, 130, 246, 0.15);
+  }
+}
+
+@keyframes glow-amber-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px 2px rgba(245, 158, 11, 0.4),
+      inset 0 0 14px rgba(245, 158, 11, 0.08);
+  }
+
+  50% {
+    box-shadow: 0 0 24px 8px rgba(245, 158, 11, 0.75),
+      inset 0 0 24px rgba(245, 158, 11, 0.18);
+  }
+}
+
+@keyframes glow-red-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px 3px rgba(239, 68, 68, 0.5),
+      inset 0 0 16px rgba(239, 68, 68, 0.12);
+  }
+
+  50% {
+    box-shadow: 0 0 32px 12px rgba(239, 68, 68, 0.95),
+      inset 0 0 28px rgba(239, 68, 68, 0.25);
+  }
+}
+
+.tile-normal {
+  animation: glow-blue-pulse 3s ease-in-out infinite;
+}
+
+.tile-wasting {
+  animation: glow-amber-pulse 2s ease-in-out infinite;
+}
+
+.tile-flagged {
+  animation: glow-red-pulse 0.8s ease-in-out infinite;
+}
+
+/* ─── Tile hover intensification ─────────────────────────────── */
+.tile-normal:hover {
+  filter: drop-shadow(0 0 14px rgba(59, 130, 246, 0.7)) brightness(1.1);
+}
+
+.tile-wasting:hover {
+  filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.8)) brightness(1.1);
+}
+
+.tile-flagged:hover {
+  filter: drop-shadow(0 0 18px rgba(239, 68, 68, 0.9)) brightness(1.12);
+}
+
+/* ─── Ripple ring (flagged tiles) ────────────────────────────── */
+@keyframes ripple-expand {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.ripple-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 1.5px solid rgba(239, 68, 68, 0.7);
+  pointer-events: none;
+  animation: ripple-expand 2.4s ease-out infinite;
+}
+
+.ripple-ring-2 {
+  animation-delay: 1.2s;
+}
+
+/* ─── Status change burst ────────────────────────────────────── */
+@keyframes burst-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
+.status-burst {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: burst-in 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ─── Gradient text ──────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-amber {
+  background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Live indicator dot ─────────────────────────────────────── */
+@keyframes live-ping {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  75% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.live-dot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.live-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: live-ping 1.4s ease-out infinite;
+}
+
+/* ─── Panel slide ────────────────────────────────────────────── */
+@keyframes slideInRight {
+  from {
+    transform: translateX(105%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(105%);
+    opacity: 0;
+  }
+}
+
+.panel-enter {
+  animation: slideInRight 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.panel-exit {
+  animation: slideOutRight 0.28s cubic-bezier(0.7, 0, 1, 0.84) both;
+}
+
+/* ─── Micro-interactions ─────────────────────────────────────── */
+.btn-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hover:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.15);
+}
+
+.btn-hover:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+/* ─── Recharts custom ────────────────────────────────────────── */
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* ─── Alert badge shimmer ────────────────────────────────────── */
+@keyframes shimmer {
+  from {
+    background-position: -200% center;
+  }
+
+  to {
+    background-position: 200% center;
+  }
+}
+
+.shimmer-badge {
+  background: linear-gradient(90deg,
+      rgba(239, 68, 68, 0.15) 0%,
+      rgba(239, 68, 68, 0.35) 50%,
+      rgba(239, 68, 68, 0.15) 100%);
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+}
+
+/* ─── Utility ────────────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
