@@ -57,3 +57,50 @@ class CounterfactualResponse(BaseModel):
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+class ActuationEvent(BaseModel):
+    event: str = "actuation:event"
+    action_id: str
+    room_id: str
+    device: str
+    action: Action
+    reason: str
+    timestamp: datetime
+    status: str
+
+
+class LedgerUpdateEvent(BaseModel):
+    event: str = "ledger:update"
+    action_id: str
+    room_id: str
+    kwh_saved: float
+    rupees_saved: float
+    co2_saved_kg: float
+    total_kwh_saved: float
+    total_rupees_saved: float
+    total_co2_saved_kg: float
+    timestamp: datetime
+
+class ActuationEvent(BaseModel):
+    event: str = "actuation:event"
+    action_id: str
+    room_id: str
+    device: str
+    action: Action
+    reason: str
+    timestamp: datetime
+    status: str
+
+
+class LedgerUpdateEvent(BaseModel):
+    event: str = "ledger:update"
+    action_id: str
+    room_id: str
+    kwh_saved: float
+    rupees_saved: float
+    co2_saved_kg: float
+    total_kwh_saved: float
+    total_rupees_saved: float
+    total_co2_saved_kg: float
+    timestamp: datetime
