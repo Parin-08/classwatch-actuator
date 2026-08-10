@@ -2,13 +2,17 @@
 // IMPORTANT: every call is wrapped so a downed/half-built teammate service
 // never takes down the backend. Log and fall back instead of throwing.
 
+// Server-to-server calls to ML / Decision / Actuation services.
+// IMPORTANT: every call is wrapped so a downed/half-built teammate service
+// never takes down the backend. Log and fall back instead of throwing.
+
 const axios = require("axios");
 
 const ML_URL = process.env.ML_SERVICE_URL || "http://localhost:8001";
 const DECISION_URL = process.env.DECISION_SERVICE_URL || "http://localhost:8002";
 const ACTUATION_URL = process.env.ACTUATION_SERVICE_URL || "http://localhost:8003";
 
-const TIMEOUT_MS = 1500;
+const TIMEOUT_MS = 4000;
 
 async function getAnomaly({ room_id, power_watts, occupancy, timestamp }) {
   try {
@@ -44,8 +48,6 @@ async function getDecision(payload) {
     return data;
   } catch (err) {
     console.warn(`[Decision /decide] unavailable, using fallback (${err.message})`);
-    // Safe default: never auto-actuate if the decision layer is down —
-    // just log, so we don't cut power on unvetted logic.
     return {
       room_id: payload.room_id,
       decision: "log_only",
@@ -55,17 +57,56 @@ async function getDecision(payload) {
   }
 }
 
-async function actuate({ room_id, action, source, reason }) {
+// Shravya's Decision Layer — score + leaderboard
+async function getRoomScore(room_id) {
+  try {
+    const { data } = await axios.get(`${DECISION_URL}/rooms/${room_id}/score`, { timeout: TIMEOUT_MS });
+    return data;
+  } catch (err) {
+    console.warn(`[Decision /rooms/:id/score] unavailable, using fallback (${err.message})`);
+    return { room_id, efficiency_score: null, tier: "unknown", flags_this_week: 0, streak_days_clean: 0 };
+  }
+}
+
+async function getLeaderboard(limit = 5) {
+  try {
+    const { data } = await axios.get(`${DECISION_URL}/leaderboard`, {
+      params: { limit },
+      timeout: TIMEOUT_MS,
+    });
+    return data;
+  } catch (err) {
+    console.warn(`[Decision /leaderboard] unavailable, using fallback (${err.message})`);
+    return { top: [], bottom: [] };
+  }
+}
+
+// Matches Parin's live actuator contract:
+// request:  { room_id, device, action, reason, estimated_power_kw, duration_minutes }
+// response: { action_id, room_id, device, action, reason, timestamp, status,
+//             estimated_power_kw, duration_minutes, kwh_saved, rupees_saved, co2_saved_kg }
+async function actuate({ room_id, device, action, reason, estimated_power_kw, duration_minutes }) {
   try {
     const { data } = await axios.post(
       `${ACTUATION_URL}/actuate`,
-      { room_id, action, source, reason },
+      { room_id, device, action, reason, estimated_power_kw, duration_minutes },
       { timeout: TIMEOUT_MS }
     );
     return data;
   } catch (err) {
     console.warn(`[Actuation /actuate] unavailable, using fallback (${err.message})`);
-    return { success: false, room_id, actuated_at: new Date().toISOString(), device_used: "unavailable" };
+    return {
+      action_id: null,
+      room_id,
+      device,
+      action,
+      reason,
+      timestamp: new Date().toISOString(),
+      status: "failed",
+      kwh_saved: 0,
+      rupees_saved: 0,
+      co2_saved_kg: 0,
+    };
   }
 }
 
@@ -75,8 +116,16 @@ async function getLedger() {
     return data;
   } catch (err) {
     console.warn(`[Actuation /ledger] unavailable, using local fallback (${err.message})`);
-    return null; // caller should fall back to local mock ledger
+    return null;
   }
 }
 
-module.exports = { getAnomaly, getPrediction, getDecision, actuate, getLedger };
+module.exports = {
+  getAnomaly,
+  getPrediction,
+  getDecision,
+  getRoomScore,
+  getLeaderboard,
+  actuate,
+  getLedger,
+};

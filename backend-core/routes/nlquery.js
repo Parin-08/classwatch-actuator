@@ -24,7 +24,7 @@ function buildNlQueryRouter() {
         ledger: {
           total_kwh_saved: ledger.total_kwh_saved,
           total_rupees_saved: ledger.total_rupees_saved,
-          total_co2_kg_saved: ledger.total_co2_kg_saved,
+         total_co2_kg_saved: ledger.total_co2_saved_kg,
         },
       };
 
@@ -38,7 +38,7 @@ ${JSON.stringify(context, null, 2)}
 QUESTION: ${question}`;
 
       const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
         {
           contents: [{ parts: [{ text: prompt }] }],
         }

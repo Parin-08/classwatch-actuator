@@ -1,11 +1,21 @@
 // Rules engine — cheap, fast, synchronous checks run on every /ingest.
-// These flags get passed to the Decision Layer (:8002/decide) as rule_flags.
+// These flags get passed to the Decision Layer (:8092/decide) as rule_flags.
 
 function evaluateRules(room) {
   const flags = [];
   const nowMs = Date.now();
   const classEndMs = room.last_class_end ? new Date(room.last_class_end).getTime() : null;
   const classStartMs = room.next_class_start ? new Date(room.next_class_start).getTime() : null;
+
+  // ALWAYS emit an explicit occupancy signal — this is a hard safety flag,
+  // not a wastage-detection rule. It must fire independently of the other
+  // three checks below so the Decision Layer never has to infer occupancy
+  // from an empty flags array. Confirm exact string match with Shravya
+  // (she mentioned checking for "occupied" / "class_in_session" /
+  // "motion_detected" — using "occupied" here, verify before demo).
+  if (room.occupancy > 0 || room.occupancy_count > 0) {
+    flags.push("occupied");
+  }
 
   // idle_after_class: power draw high, no occupancy, class already ended
   if (room.occupancy === 0 && room.power_watts > 200 && classEndMs && nowMs > classEndMs) {
